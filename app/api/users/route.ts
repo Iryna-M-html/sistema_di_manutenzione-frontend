@@ -5,7 +5,23 @@ import { api } from '../api';
 
 export async function GET(req: NextRequest) {
   try {
-    const res = await api.get('/users');
+    const search = req.nextUrl.searchParams.get('search') ?? '';
+    const rawRole = req.nextUrl.searchParams.get('role') ?? '';
+    const role = rawRole === 'all' ? '' : rawRole;
+    const rawStatus = req.nextUrl.searchParams.get('status') ?? '';
+    const status = rawStatus === 'all' ? '' : rawStatus;
+    const page = Number(req.nextUrl.searchParams.get('page') ?? 1);
+    const perPage = Number(req.nextUrl.searchParams.get('perPage') ?? 10);
+
+    const res = await api.get('/users', {
+      params: {
+        ...(search ? { search } : {}),
+        ...(role ? { role } : {}),
+        ...(status ? { status } : {}),
+        page,
+        perPage,
+      },
+    });
     return NextResponse.json(res.data.users);
   } catch (error) {
     if (isAxiosError(error)) {

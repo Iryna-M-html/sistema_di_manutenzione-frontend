@@ -17,12 +17,28 @@ export type UserRoles =
   | 'maintenanceWorker'
   | 'safety';
 
+export type UserStatus = 'active' | 'deactivated';
+
 export interface GetMeRespons {
   success: boolean;
   user: User;
 }
 
-export type UserStatus = 'active' | 'deactivated';
+export interface UserRequest {
+  search?: string;
+  role?: UserRoles;
+  status?: UserStatus;
+  page?: number;
+  perPage?: number;
+}
+
+export interface UsersResponse {
+  page: number;
+  perPage: number;
+  totalPage: number;
+  totalUsers: number;
+  users: User[];
+}
 
 export interface UpdateUserRequest {
   userId: string;
