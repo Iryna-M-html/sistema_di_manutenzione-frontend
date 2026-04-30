@@ -3,12 +3,27 @@ import {
   UpdateUserRequest,
   UpdateUserResponse,
   User,
+  UserRequest,
+  UsersResponse,
 } from '@/types/userTypes';
 import nextServer from './api';
 
-export const getAllUsers = async () => {
-  const { data } = await nextServer.get<User[]>('/users');
-  return data;
+export const getAllUsers = async ({
+  search,
+  role,
+  status,
+  page,
+  perPage,
+}: UserRequest) => {
+  const params = {
+    search,
+    role,
+    status,
+    page,
+    perPage: 10,
+  };
+  const { data } = await nextServer.get<UsersResponse>('/users', { params });
+  return data.users;
 };
 
 export const getMe = async () => {

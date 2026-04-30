@@ -10,11 +10,11 @@ const NoFound = ({ title, message }: NoFoundProps) => {
     <div className={css.noFound}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="90"
-        height="90"
+        width="110"
+        height="110"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="var(--primary-color)"
+        stroke="#2563eb"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"

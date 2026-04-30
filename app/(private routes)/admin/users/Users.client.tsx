@@ -14,11 +14,13 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import css from './Users.module.css';
+import { UserRoles, UserStatus } from '@/types/userTypes';
+import NoFound from '@/components/UI/NoFound/NoFound';
 
 const AdminUsersClientPage = () => {
   const [search, setSearch] = useState<string>('');
-  const [role, setRole] = useState<string>('');
-  const [status, setStatus] = useState<string>('');
+  const [role, setRole] = useState<UserRoles | string>('');
+  const [status, setStatus] = useState<UserStatus | string>('');
   const [page, setPage] = useState(1);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [debouncedSearch] = useDebounce(search, 500);
@@ -56,7 +58,7 @@ const AdminUsersClientPage = () => {
       value: roleMapper.getLabelByValue(role) ?? tRoles('all'),
       options: roleMapper.labelsArray,
       onSelect: label => {
-        const value = roleMapper.getValueByLabel(label) ?? 'all';
+        const value = roleMapper.getValueByLabel(label) ?? '';
         setRole(value);
       },
     },
@@ -67,7 +69,7 @@ const AdminUsersClientPage = () => {
       value: statusMapper.getLabelByValue(status) ?? tStatuses('all'),
       options: statusMapper.labelsArray,
       onSelect: label => {
-        const value = statusMapper.getValueByLabel(label) ?? 'all';
+        const value = statusMapper.getValueByLabel(label) ?? '';
         setStatus(value);
       },
     },
@@ -79,10 +81,24 @@ const AdminUsersClientPage = () => {
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => getAllUsers(),
+    queryKey: [
+      'users',
+      debouncedSearch || undefined,
+      role || undefined,
+      status || undefined,
+      page,
+    ],
+    queryFn: () =>
+      getAllUsers({
+        search: debouncedSearch,
+        role: role as UserRoles | undefined,
+        status: status as UserStatus | undefined,
+        page,
+      }),
     placeholderData: keepPreviousData,
   });
+
+  console.log(users);
 
   const handleCreateUser = () => {
     setIsOpenModal(true);
@@ -107,7 +123,13 @@ const AdminUsersClientPage = () => {
         </Button>
       </div>
       <Filters items={filters} />
-      <UsersList users={users ?? []} />
+      {users?.length === 0 && (
+        <NoFound
+          title="Nessun risultato trovato"
+          message="Prova a modificare o rimuovere i filtri per visualizzare più utenti"
+        />
+      )}
+      {isSuccess && users.length > 0 && <UsersList users={users ?? []} />}
       {isOpenModal && (
         <CreateAndEditUserForm
           onClose={() => {

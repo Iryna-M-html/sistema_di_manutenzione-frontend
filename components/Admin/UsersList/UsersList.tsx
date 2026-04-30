@@ -11,6 +11,7 @@ interface UsersListProps {
 
 const UsersList = ({ users }: UsersListProps) => {
   const t = useTranslations('AdminPage.UsersList');
+
   return (
     <div className={css.users_container}>
       <ul className={css.title_list}>
