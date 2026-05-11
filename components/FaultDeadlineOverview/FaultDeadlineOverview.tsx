@@ -3,7 +3,7 @@
 import React from 'react';
 import css from './FaultDeadlineOverview.module.css';
 import { FaultCard } from '@/types/faultType';
-import { format } from 'date-fns';
+import { format, isPast } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 
@@ -22,19 +22,8 @@ const FaultDeadlineOverview = ({
     ? format(new Date(selectedDate), 'MMMM yyyy', { locale: it })
     : format(new Date(), 'MMMM yyyy', { locale: it });
 
-  const handleRowClick = (id: string) => {
+  const handleDetailClick = (id: string) => {
     router.push(`/maintenance-worker/${id}`);
-  };
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'Completed':
-        return css.statusCompleted;
-      case 'Suspended':
-        return css.statusSuspended;
-      default:
-        return css.statusInProgress;
-    }
   };
 
   return (
@@ -43,67 +32,80 @@ const FaultDeadlineOverview = ({
         {displayDate.charAt(0).toUpperCase() + displayDate.slice(1)}
       </h3>
 
-      <div className={css.tableWrapper}>
-        <table className={css.deadlineTable}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Macchina</th>
-              <th>Parte di impianto</th>
-              <th>Manutentore</th>
-              <th>Priorità</th>
-              <th>Scadenza</th>
-              <th>Stato</th>
-              <th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
-            {faults.map(fault => (
-              <tr key={fault._id} className={css.tableRow}>
-                <td className={css.idCell}>{fault.faultId}</td>
-                <td>{fault.plantId?.namePlant || '---'}</td>
-                <td>{fault.partId?.namePlantPart || '---'}</td>
-                <td className={css.workerCell}>
-                  {/* Вывод массива имен через запятую */}
-                  {fault.assignedMaintainers &&
-                  fault.assignedMaintainers.length > 0
-                    ? fault.assignedMaintainers.join(', ')
-                    : 'Non assegnato'}
-                </td>
-                <td>
+      <ul className={css.cardList}>
+        {faults.map(fault => {
+          // Проверка: просрочен ли дедлайн (если статус не Completed)
+          const isOverdue =
+            fault.deadline &&
+            isPast(new Date(fault.deadline)) &&
+            fault.statusFault !== 'Completed';
+
+          return (
+            <li
+              key={fault._id}
+              className={`${css.faultCard} ${isOverdue ? css.overdueCard : ''}`}
+            >
+              {isOverdue && <div className={css.overdueLabel}>SCADUTO</div>}
+
+              <div className={css.cardHeader}>
+                <span className={css.faultId}>{fault.faultId}</span>
+                <span
+                  className={`${css.statusBadge} ${css[`status${fault.statusFault}`]}`}
+                >
+                  {fault.statusFault}
+                </span>
+              </div>
+
+              <div className={css.mainInfo}>
+                <p className={css.plantName}>
+                  <strong>Macchina:</strong> {fault.plantId?.namePlant || '---'}
+                </p>
+                <p className={css.partName}>
+                  {fault.partId?.namePlantPart || '---'}
+                </p>
+              </div>
+
+              <div className={css.detailsGrid}>
+                <div className={css.detailItem}>
+                  <span className={css.label}>Manutentore</span>
+                  <p className={css.value}>
+                    {fault.assignedMaintainers?.length
+                      ? fault.assignedMaintainers.join(', ')
+                      : 'Non assegnato'}
+                  </p>
+                </div>
+                <div className={css.detailItem}>
+                  <span className={css.label}>Priorità</span>
                   <span
                     className={`${css.priorityBadge} ${css[fault.priority.toLowerCase()]}`}
                   >
                     {fault.priority}
                   </span>
-                </td>
-                <td className={css.deadlineCell}>
-                  <span className={css.deadlineText}>
+                </div>
+              </div>
+
+              <div className={css.cardFooter}>
+                <div className={css.deadlineBlock}>
+                  <span className={css.label}>Scadenza</span>
+                  <p
+                    className={`${css.deadlineText} ${isOverdue ? css.overdueText : ''}`}
+                  >
                     {fault.deadline
                       ? format(new Date(fault.deadline), 'dd/MM/yyyy HH:mm')
                       : '---'}
-                  </span>
-                </td>
-                <td>
-                  <span
-                    className={`${css.statusBadge} ${getStatusClass(fault.statusFault)}`}
-                  >
-                    {fault.statusFault}
-                  </span>
-                </td>
-                <td>
-                  <button
-                    className={css.detailsBtn}
-                    onClick={() => handleRowClick(fault._id)}
-                  >
-                    Dettagli
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  </p>
+                </div>
+                <button
+                  className={css.detailsBtn}
+                  onClick={() => handleDetailClick(fault._id)}
+                >
+                  Dettagli
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 };
