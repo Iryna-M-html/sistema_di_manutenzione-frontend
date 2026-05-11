@@ -52,7 +52,7 @@ export default function FaultDetailPage({
       };
     });
     setIsUpdateModalOpen(false);
-  }; // <--- ЗДЕСЬ БЫЛА ОШИБКА (пропущена скобка)
+  };
   if (isLoading) return <div className={css.loading}>Caricamento...</div>;
   if (!fault) return <div className={css.error}>Intervento non trovato</div>;
 
